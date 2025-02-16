@@ -7,3 +7,5 @@ def get_video_url(video_url):
         return video.url  # Returns the direct video download link
     except Exception as e:
         return f"Error: {str(e)}"
+
+print("Python script loaded")  # Debugging message
