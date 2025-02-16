@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+</head>
+<body>
+    <h2>YouTube Video Downloader</h2>
+    <input type="text" id="video-url" placeholder="Enter YouTube Video URL" size="50">
+    <button onclick="fetchDownloadLink()">Get Download Link</button>
+    
+    <h3>Download Link:</h3>
+    <pre id="output">Waiting for input...</pre>
+
+    <script>
+        let pyodide;
+        
+        async function loadPyodideAndModules() {
+            pyodide = await loadPyodide();
+            
+            // Load pytube module files dynamically
+            let modules = ["__init__.py", "cipher.py", "extract.py", "streams.py", "monostate.py", "query.py", "helpers.py"];
+            for (let file of modules) {
+                let response = await fetch("pytube/" + file);
+                let code = await response.text();
+                pyodide.runPython(code);  // Execute module
+            }
+
+            // Load script.py
+            let response = await fetch("script.py");
+            let scriptCode = await response.text();
+            pyodide.runPython(scriptCode);
+        }
+
+        async function fetchDownloadLink() {
+            let videoUrl = document.getElementById("video-url").value;
+            if (!videoUrl) {
+                document.getElementById("output").innerText = "Please enter a YouTube URL.";
+                return;
+            }
+
+            try {
+                let result = pyodide.runPython(`get_video_url("${videoUrl}")`);
+                document.getElementById("output").innerHTML = `<a href="${result}" target="_blank">${result}</a>`;
+            } catch (error) {
+                document.getElementById("output").innerText = "Error: " + error;
+            }
+        }
+
+        loadPyodideAndModules();
+    </script>
+</body>
+</html>
