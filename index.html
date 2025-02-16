@@ -16,22 +16,25 @@
 
     <script>
         let pyodide;
-        
+
         async function loadPyodideAndModules() {
             pyodide = await loadPyodide();
-            
+            console.log("Pyodide loaded");
+
             // Load pytube module files dynamically
             let modules = ["__init__.py", "cipher.py", "extract.py", "streams.py", "monostate.py", "query.py", "helpers.py"];
             for (let file of modules) {
                 let response = await fetch("pytube/" + file);
                 let code = await response.text();
-                pyodide.runPython(code);  // Execute module
+                pyodide.runPython(code);
             }
+            console.log("pytube module loaded");
 
-            // Load script.py
+            // Load and execute script.py
             let response = await fetch("script.py");
             let scriptCode = await response.text();
             pyodide.runPython(scriptCode);
+            console.log("script.py loaded");
         }
 
         async function fetchDownloadLink() {
@@ -42,6 +45,12 @@
             }
 
             try {
+                // Ensure Pyodide and the script are loaded before calling
+                if (!pyodide) {
+                    document.getElementById("output").innerText = "Error: Pyodide not loaded yet.";
+                    return;
+                }
+                
                 let result = pyodide.runPython(`get_video_url("${videoUrl}")`);
                 document.getElementById("output").innerHTML = `<a href="${result}" target="_blank">${result}</a>`;
             } catch (error) {
